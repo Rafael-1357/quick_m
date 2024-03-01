@@ -20,21 +20,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from './components/ui/input'
+import { ToastAction } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 import { useState, useEffect } from 'react'
 
+import { useNavigate } from 'react-router-dom'
+
 const FormSchema = z.object({
-  users: z.string({
-      required_error: "Selecione uma atendente",
-    }),
+  user: z.string({
+    required_error: "Selecione um(a) usuário(a)",
+  }),
   password: z.string({
     required_error: "Insira a senha",
   })
     .min(2, 'A senha deve conter mais de dois caracteres')
-})
+});
 
-export function App() {
+export function Login() {
 
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate()
+  const { toast } = useToast()
 
   useEffect(() => {
     getUsers()
@@ -47,20 +53,46 @@ export function App() {
     },
   })
 
-  function onSubmit(data) {
-    console.log(data)
+  async function onSubmit(data) {
+    const response = await fetch('http://localhost:3000/api/users/auth', {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(data)
+    });
+
+    const dataResponse = await response.json();
+
+    if(dataResponse.error != '') {
+      toast({
+        variant: "destructive",
+        title: "Opss... Falha ao tentar entrar!",
+        description: "Verifique se sua senha está correta.",
+      })
+      return
+    }
+
+    localStorage.setItem('user', JSON.stringify(dataResponse.results[0]))
+    toast({
+      variant: "success",
+      title: "Sucesso",
+      description: "Você entrou em sua conta!",
+    })
+    navigate('/PreSale')
   }
 
   async function getUsers() {
-    const response = await fetch('http://localhost:3000/api/funcionarios',{
+    const response = await fetch('http://localhost:3000/api/users', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
       },
     });
-  
+
     const data = await response.json();
     setUsers(data.results)
+    console.log(data.results)
   }
 
   return (
@@ -69,7 +101,7 @@ export function App() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 w-[260px]">
           <FormField
             control={form.control}
-            name="users"
+            name="user"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Usuário(a)</FormLabel>
@@ -82,7 +114,7 @@ export function App() {
                   <SelectContent>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.name.toString()}>
-                          {(user.name).toUpperCase()}                                              
+                        {(user.name).toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -104,11 +136,11 @@ export function App() {
               </FormItem>
             )}
           />
-          <Button className="bg-purple-500 hover:bg-purple-600" type="submit">Submit</Button>
+          <Button className="bg-purple-500 hover:bg-purple-600" type="submit">Entrar</Button>
         </form>
       </Form>
     </main>
   )
 }
 
-export default App;
+export default Login;
