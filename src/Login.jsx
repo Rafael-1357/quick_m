@@ -83,7 +83,7 @@ export function Login() {
   }
 
   async function getUsers() {
-    const response = await fetch('http://localhost:3000/api/users', {
+    const response = await fetch('http://129.151.108.167:3000/api/users', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
