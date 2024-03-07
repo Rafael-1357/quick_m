@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Minus, Plus } from "lucide-react";
-
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Separator } from "@/components/ui/separator"
 
 
 export function Sales() {
 
   const [products, setProducts] = useState([]);
-  const { handleSubmit } = useForm()
 
   useEffect(() => {
     getProducts()
@@ -87,17 +95,17 @@ export function Sales() {
     const data = await response.json();
     const dataResults = data.results
 
-    // console.log(dataResults)
+    console.log(dataResults)
   }
 
   return (
-    <main className="w-full h-screen flex flex-col gap-4">
+    <main className="w-full h-screen flex flex-col gap-4 bg-zinc-50">
       <header className="w-full flex justify-end">
         <h1 className="p-2 m-2 rounded uppercase border-2 border-zinc-400">
           {localStorage.getItem('username')}
         </h1>
       </header>
-      <form onSubmit={handleSubmit(createOrder)} className="w-full h-full p-2 flex flex-col justify-between">
+      <form className="w-full h-full p-2 flex flex-col justify-between">
         <div className="w-full flex gap-3">
           {products.map((product) => (
             <div
@@ -130,12 +138,37 @@ export function Sales() {
             </div>
           ))}
         </div>
-        <button
-          type="submit"
-          className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
-          Enviar
-        </button>
+        <Drawer>
+          <DrawerTrigger>
+            <button
+              type="button"
+              className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
+              Conferir
+            </button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              {
+                products.map(product => (
+                  product.qtd != 0 &&
+                  <div className="text-left">
+                    <DrawerTitle>{product.productname}</DrawerTitle>
+                    <DrawerDescription>R$ {product.productvalue} | Quantidade: {product.qtd}</DrawerDescription>
+                    <Separator className="my-4" />
+                  </div>
+                ))
+              }
+            </DrawerHeader>
+            <DrawerFooter>
+              <button
+                onClick={createOrder}
+                className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
+                Finalizar
+              </button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
       </form>
-    </main>
+    </main >
   )
 }

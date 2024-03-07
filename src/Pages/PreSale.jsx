@@ -17,7 +17,7 @@ export function PreSale() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col justify-center items-center antialiased">
+    <div className="w-full h-screen flex flex-col justify-center items-center antialiased bg-zinc-50">
       <header className="font-bold text-lg mb-3">
         Olá, <span className="capitalize font-normal text-purple-500">{user.name}</span>. Como vai?
       </header>
