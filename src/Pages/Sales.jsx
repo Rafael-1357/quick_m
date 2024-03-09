@@ -85,7 +85,6 @@ export function Sales() {
     const data = await response.json();
     const dataResults = data.results
     setPaymentMethods(dataResults)
-    console.log(dataResults);
   }
 
   function modifyQuantity(productId, action) {
@@ -125,18 +124,19 @@ export function Sales() {
   }
 
   async function createOrder(data) {
-    console.log(data)
     const user = JSON.parse(localStorage.getItem('user'))
 
     let totalPurchase = checkTotalValue();
 
     const datasale = new Date()
 
+
     const dataJSON = JSON.stringify({
       users_iduser: user.id,
       products: products,
       totalsale: totalPurchase.toString(),
-      datesale: datasale
+      datesale: datasale,
+      payment_methods: data.payment_method
     })
 
     const response = await fetch('http://localhost:3000/api/sale', {
@@ -164,19 +164,21 @@ export function Sales() {
   }
 
   return (
-    <main className="w-full h-screen flex flex-col gap-4 bg-zinc-50">
-      <header className="w-full flex justify-end">
-        <h1 className="p-2 m-2 rounded uppercase border-2 border-zinc-400">
-          {localStorage.getItem('username')}
+    <main className="w-full h-screen flex flex-col bg-zinc-50  overscroll-none">
+      <header className="w-full flex justify-end ">
+        <h1 className="p-2 m-1 rounded uppercase border-2 border-zinc-400">
+          {
+            JSON.parse(localStorage.getItem('user')).name
+          }
         </h1>
       </header>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(createOrder)} className="w-full h-full p-2 flex flex-col justify-between">
-          <div className="w-full flex gap-3">
+        <form onSubmit={form.handleSubmit(createOrder)} className="w-full h-[95%] p-2 flex flex-col gap-3">
+          <div className="w-full grid grid-cols-2 gap-3 overflow-auto h-[90%]">
             {products.map((product) => (
               <div
                 key={product.id}
-                className="w-1/2 bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
+                className="w-full bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
               >
                 <h1 className="text-lg font-bold">{(product.productname).toUpperCase()}</h1>
                 <p>R$ {product.productvalue}</p>
@@ -204,7 +206,7 @@ export function Sales() {
               </div>
             ))}
           </div>
-          <Drawer {...form}>
+          <Drawer>
             <DrawerTrigger>
               <button
                 type="button"
@@ -213,7 +215,7 @@ export function Sales() {
               </button>
             </DrawerTrigger>
             <DrawerContent>
-              <DrawerHeader>
+              <DrawerHeader className="max-h-96 overflow-auto">
                 {
                   products.map(product => (
                     product.qtd != 0 &&
@@ -259,7 +261,7 @@ export function Sales() {
                     const button = document.getElementById('submit');
                     button.click();
                   }}
-                  className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
+                  className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500 mt-2">
                   Finalizar
                 </Button>
               </DrawerFooter>
@@ -268,6 +270,6 @@ export function Sales() {
           <button className="hidden" id="submit" type="submit" />
         </form>
       </Form>
-    </main >
+    </main>
   )
 }
