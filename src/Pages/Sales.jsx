@@ -11,17 +11,52 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator"
+import { useNavigate } from 'react-router-dom'
+import { useToast } from "@/components/ui/use-toast"
+
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+const FormSchema = z.object({
+  payment_method: z.string({
+    required_error: "Selecione um(a) usuário(a)",
+  })
+});
 
 
 export function Sales() {
 
   const [products, setProducts] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const navigate = useNavigate()
+  const { toast } = useToast()
 
   useEffect(() => {
     getProducts()
+    getPaymentMethods()
   }, []);
+
+  const form = useForm({
+    resolver: zodResolver(FormSchema),
+  })
 
   async function getProducts() {
     const response = await fetch('http://localhost:3000/api/products', {
@@ -39,48 +74,68 @@ export function Sales() {
     setProducts(dataResults)
   }
 
+  async function getPaymentMethods() {
+    const response = await fetch('http://localhost:3000/api/payment', {
+      method: "GET",
+      headers: {
+        "Content-type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    const dataResults = data.results
+    setPaymentMethods(dataResults)
+    console.log(dataResults);
+  }
+
   function modifyQuantity(productId, action) {
 
     if (action === 'add') {
-      setProducts((prevState) =>
-        prevState.map((objeto) =>
-          objeto.id === productId ? { ...objeto, qtd: objeto.qtd + 1 } : objeto
+      setProducts((product) =>
+        product.map((product) =>
+          product.id === productId ? { ...product, qtd: product.qtd + 1 } : product
         )
       );
     } else if (action === 'remove') {
-      setProducts((prevState) =>
-        prevState.map((objeto) =>
-          objeto.id === productId ? { ...objeto, qtd: objeto.qtd - 1 } : objeto
+      setProducts((product) =>
+        product.map((product) =>
+          product.id === productId && product.qtd > 0 ? { ...product, qtd: product.qtd - 1 } : product
         )
       );
     }
   }
 
-  async function createOrder() {
-
-    const user = JSON.parse(localStorage.getItem('user'))
-    const order = products.filter(product => {
+  function checkSelectedProducts() {
+    return products.filter(product => {
       if (product.qtd > 0) {
         return product
       }
     })
-    const productsNames = order.map(product => {
-      return product.productname;
-    })
-    console.log(productsNames)
-    let totalSale = 0;
-    order.map(product => {
+  }
+
+  function checkTotalValue() {
+    let totalPurchase = 0;
+    checkSelectedProducts().map(product => {
       const value = parseFloat(product.productvalue);
       const qtd = parseInt(product.qtd)
       const totalValue = qtd * value;
-      return totalSale += totalValue;
+      return totalPurchase += totalValue;
     })
+    return totalPurchase
+  }
+
+  async function createOrder(data) {
+    console.log(data)
+    const user = JSON.parse(localStorage.getItem('user'))
+
+    let totalPurchase = checkTotalValue();
+
     const datasale = new Date()
 
     const dataJSON = JSON.stringify({
       users_iduser: user.id,
-      products: productsNames,
-      totalsale: totalSale.toString(),
+      products: products,
+      totalsale: totalPurchase.toString(),
       datesale: datasale
     })
 
@@ -92,10 +147,20 @@ export function Sales() {
       body: dataJSON
     });
 
-    const data = await response.json();
-    const dataResults = data.results
-
-    console.log(dataResults)
+    if (response.status === 200) {
+      toast({
+        variant: "success",
+        title: "Sucesso",
+        description: "Venda feita com sucesso!",
+      })
+      navigate('/PreSale')
+      return
+    }
+    toast({
+      variant: "destructive",
+      title: "Opss... Falha ao enviar venda!",
+      description: "Verifique sua conexão com a internet.",
+    })
   }
 
   return (
@@ -105,70 +170,104 @@ export function Sales() {
           {localStorage.getItem('username')}
         </h1>
       </header>
-      <form className="w-full h-full p-2 flex flex-col justify-between">
-        <div className="w-full flex gap-3">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="w-1/2 bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
-            >
-              <h1 className="text-lg font-bold">{(product.productname).toUpperCase()}</h1>
-              <p>R$ {product.productvalue}</p>
-              <div className="flex gap-1 justify-between">
-                <Button
-                  type='button'
-                  onClick={() => modifyQuantity(product.id, 'add')}
-                  className="bg-purple-500 hover:bg-purple-600">
-                  <Plus />
-                </Button>
-                <Input
-                  name={product.productname}
-                  readOnly
-                  type='Number'
-                  value={product.qtd}
-                  className="text-center text-lg m-0 border-zinc-400"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(createOrder)} className="w-full h-full p-2 flex flex-col justify-between">
+          <div className="w-full flex gap-3">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="w-1/2 bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
+              >
+                <h1 className="text-lg font-bold">{(product.productname).toUpperCase()}</h1>
+                <p>R$ {product.productvalue}</p>
+                <div className="flex gap-1 justify-between">
+                  <Button
+                    type='button'
+                    onClick={() => modifyQuantity(product.id, 'add')}
+                    className="bg-purple-500 hover:bg-purple-600">
+                    <Plus />
+                  </Button>
+                  <Input
+                    name={product.productvalue}
+                    readOnly
+                    type='Number'
+                    value={product.qtd}
+                    className="text-center text-lg m-0 border-zinc-400"
+                  />
+                  <Button
+                    type='button'
+                    onClick={() => modifyQuantity(product.id, 'remove')}
+                    className="bg-purple-500 hover:bg-purple-600">
+                    <Minus />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Drawer {...form}>
+            <DrawerTrigger>
+              <button
+                type="button"
+                className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
+                Conferir
+              </button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                {
+                  products.map(product => (
+                    product.qtd != 0 &&
+                    <div className="text-left">
+                      <DrawerTitle>{product.productname}</DrawerTitle>
+                      <DrawerDescription>R$ {product.productvalue} | Quantidade: {product.qtd}</DrawerDescription>
+                      <Separator className="my-4" />
+                    </div>
+                  ))
+                }
+              </DrawerHeader>
+              <DrawerFooter>
+                <div className="mb-2">
+                  <DrawerTitle>Valor total</DrawerTitle>
+                  <DrawerDescription>R$ {checkTotalValue()}</DrawerDescription>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="payment_method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Método de pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um método" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {paymentMethods.map((method) => (
+                            <SelectItem key={method.id} value={method.method}>
+                              {(method.method).toUpperCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
                 <Button
-                  type='button'
-                  onClick={() => modifyQuantity(product.id, 'remove')}
-                  className="bg-purple-500 hover:bg-purple-600">
-                  <Minus />
+                  onClick={() => {
+                    const button = document.getElementById('submit');
+                    button.click();
+                  }}
+                  className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
+                  Finalizar
                 </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Drawer>
-          <DrawerTrigger>
-            <button
-              type="button"
-              className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
-              Conferir
-            </button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              {
-                products.map(product => (
-                  product.qtd != 0 &&
-                  <div className="text-left">
-                    <DrawerTitle>{product.productname}</DrawerTitle>
-                    <DrawerDescription>R$ {product.productvalue} | Quantidade: {product.qtd}</DrawerDescription>
-                    <Separator className="my-4" />
-                  </div>
-                ))
-              }
-            </DrawerHeader>
-            <DrawerFooter>
-              <button
-                onClick={createOrder}
-                className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
-                Finalizar
-              </button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-      </form>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+          <button className="hidden" id="submit" type="submit" />
+        </form>
+      </Form>
     </main >
   )
 }
