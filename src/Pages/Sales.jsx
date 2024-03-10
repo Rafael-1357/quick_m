@@ -181,7 +181,13 @@ export function Sales() {
                 className="w-full bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
               >
                 <h1 className="text-lg font-bold">{(product.productname).toUpperCase()}</h1>
-                <p>R$ {product.productvalue}</p>
+                <p>
+                  {
+                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      product.productvalue,
+                    )
+                  }
+                </p>
                 <div className="flex gap-1 justify-between">
                   <Button
                     type='button'
@@ -221,7 +227,12 @@ export function Sales() {
                     product.qtd != 0 &&
                     <div className="text-left">
                       <DrawerTitle>{product.productname}</DrawerTitle>
-                      <DrawerDescription>R$ {product.productvalue} | Quantidade: {product.qtd}</DrawerDescription>
+                      <DrawerDescription>
+                        R$ {
+                          new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                            product.productvalue,
+                          )}
+                        | Quantidade: {product.qtd}</DrawerDescription>
                       <Separator className="my-4" />
                     </div>
                   ))
@@ -230,7 +241,13 @@ export function Sales() {
               <DrawerFooter>
                 <div className="mb-2">
                   <DrawerTitle>Valor total</DrawerTitle>
-                  <DrawerDescription>R$ {checkTotalValue()}</DrawerDescription>
+                  <DrawerDescription>
+                    {
+                      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                        checkTotalValue(),
+                      )
+                    }
+                  </DrawerDescription>
                 </div>
                 <FormField
                   control={form.control}
