@@ -15,6 +15,11 @@ export function PreSale() {
   function onSale() {
     navigate('/sales')
   }
+  
+  function exit(){
+    localStorage.removeItem('user');
+    navigate('/')
+  }
 
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center antialiased bg-zinc-50">
@@ -28,6 +33,7 @@ export function PreSale() {
           ? <Button className="bg-purple-500 text-base text-center w-3/5 p-6" >Dashboard<ArrowRight className="ml-2" /></Button>
           : null
         }
+        <a className="text-purple-500 underline" onClick={exit}>Sair</a>
       </main>
     </div>
   )

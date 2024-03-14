@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { ArrowLeft, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +46,7 @@ export function Sales() {
 
   const [products, setProducts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -59,7 +60,7 @@ export function Sales() {
   })
 
   async function getProducts() {
-    const response = await fetch('http://localhost:3000/api/products', {
+    const response = await fetch('http://129.151.108.167:3000/api/products', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -75,7 +76,7 @@ export function Sales() {
   }
 
   async function getPaymentMethods() {
-    const response = await fetch('http://localhost:3000/api/payment', {
+    const response = await fetch('http://129.151.108.167:3000/api/payment', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -139,7 +140,7 @@ export function Sales() {
       payment_methods: data.payment_method
     })
 
-    const response = await fetch('http://localhost:3000/api/sale', {
+    const response = await fetch('http://129.151.108.167:3000/api/sale', {
       method: "POST",
       headers: {
         "Content-type": "application/json",
@@ -164,23 +165,19 @@ export function Sales() {
   }
 
   return (
-    <main className="w-full h-screen flex flex-col bg-zinc-50  overscroll-none">
-      <header className="w-full flex justify-end ">
-        <h1 className="p-2 m-1 rounded uppercase border-2 border-zinc-400">
-          {
-            JSON.parse(localStorage.getItem('user')).name
-          }
-        </h1>
+    <main className="w-full h-screen flex flex-col bg-zinc-50">
+      <header className="w-full flex justify-start ">
+        <Button onClick={() => {navigate('/PreSale')}} className="bg-purple-500 m-1 pl-3"><ArrowLeft className="mr-2" /> Voltar</Button>
       </header>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(createOrder)} className="w-full h-[95%] p-2 flex flex-col gap-3">
-          <div className="w-full grid grid-cols-2 gap-3 overflow-auto h-[90%]">
+        <form onSubmit={form.handleSubmit(createOrder)} className="w-full flex flex-col gap-3 overflow-y-auto p-2">
+          <div className="w-full grid grid-cols-2 gap-3 overflow-y-auto">
             {products.map((product) => (
               <div
                 key={product.id}
                 className="w-full bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
               >
-                <h1 className="text-lg font-bold">{(product.productname).toUpperCase()}</h1>
+                <h1 className="text-lg font-bold truncate">{(product.productname).toUpperCase()}</h1>
                 <p>
                   {
                     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
@@ -192,7 +189,7 @@ export function Sales() {
                   <Button
                     type='button'
                     onClick={() => modifyQuantity(product.id, 'add')}
-                    className="bg-purple-500 hover:bg-purple-600">
+                    className="bg-purple-500 hover:bg-purple-600 p-4">
                     <Plus />
                   </Button>
                   <Input
@@ -200,12 +197,12 @@ export function Sales() {
                     readOnly
                     type='Number'
                     value={product.qtd}
-                    className="text-center text-lg m-0 border-zinc-400"
+                    className="text-center text-lg m-0 border-zinc-400 p-0"
                   />
                   <Button
                     type='button'
                     onClick={() => modifyQuantity(product.id, 'remove')}
-                    className="bg-purple-500 hover:bg-purple-600">
+                    className="bg-purple-500 hover:bg-purple-600 p-4">
                     <Minus />
                   </Button>
                 </div>
@@ -255,7 +252,7 @@ export function Sales() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Método de pagamento</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} onChange={setPaymentMethodSelected(field.value)}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um método" />
