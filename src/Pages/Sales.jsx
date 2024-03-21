@@ -38,7 +38,8 @@ import { z } from "zod"
 const FormSchema = z.object({
   payment_method: z.string({
     required_error: "Selecione um(a) usuário(a)",
-  })
+  }),
+  currency: z.string()
 });
 
 
@@ -60,7 +61,7 @@ export function Sales() {
   })
 
   async function getProducts() {
-    const response = await fetch('http://129.151.108.167:3000/api/products', {
+    const response = await fetch('http://localhost:3000/api/products', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -76,7 +77,7 @@ export function Sales() {
   }
 
   async function getPaymentMethods() {
-    const response = await fetch('http://129.151.108.167:3000/api/payment', {
+    const response = await fetch('http://localhost:3000/api/payment', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -140,7 +141,9 @@ export function Sales() {
       payment_methods: data.payment_method
     })
 
-    const response = await fetch('http://129.151.108.167:3000/api/sale', {
+    console.log(paymentMethodSelected)
+
+    const response = await fetch('http://localhost:3000/api/sale', {
       method: "POST",
       headers: {
         "Content-type": "application/json",
@@ -167,7 +170,7 @@ export function Sales() {
   return (
     <main className="w-full h-screen flex flex-col bg-zinc-50">
       <header className="w-full flex justify-start ">
-        <Button onClick={() => {navigate('/PreSale')}} className="bg-purple-500 m-1 pl-3"><ArrowLeft className="mr-2" /> Voltar</Button>
+        <Button onClick={() => { navigate('/PreSale') }} className="bg-purple-500 m-1 pl-3"><ArrowLeft className="mr-2" /> Voltar</Button>
       </header>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(createOrder)} className="w-full flex flex-col gap-3 overflow-y-auto p-2">
@@ -270,6 +273,24 @@ export function Sales() {
                     </FormItem>
                   )}
                 />
+                {
+                  setPaymentMethodSelected == "Dinhero"
+                    ?
+                      <FormField
+                        control={form.control}
+                        name="currency"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Senha</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder=""/>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    : null
+                }
                 <Button
                   onClick={() => {
                     const button = document.getElementById('submit');
