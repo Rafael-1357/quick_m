@@ -39,7 +39,6 @@ const FormSchema = z.object({
   payment_method: z.string({
     required_error: "Selecione um(a) usuário(a)",
   }),
-  currency: z.string()
 });
 
 
@@ -274,23 +273,8 @@ export function Sales() {
                   )}
                 />
                 {
-                  setPaymentMethodSelected == "Dinhero"
-                    ?
-                      <FormField
-                        control={form.control}
-                        name="currency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <Input type="text" placeholder=""/>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    : null
-                }
+                  setPaymentMethodSelected == "Dinheiro" ? console.log('foi')
+                    : null                }
                 <Button
                   onClick={() => {
                     const button = document.getElementById('submit');
