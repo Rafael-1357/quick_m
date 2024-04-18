@@ -28,9 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator"
 import { useNavigate } from 'react-router-dom'
 import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
 
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -47,6 +47,7 @@ export function Sales() {
 
   const [products, setProducts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentChange, setPaymentChange] = useState(0)
   const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -167,8 +168,8 @@ export function Sales() {
     })
   }
 
-  function onSubmit() {
-
+  function onSubmit(data) {
+    console.log(data)
   }
 
   return (
@@ -207,17 +208,17 @@ export function Sales() {
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="px-4 flex flex-col gap-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="payment_method"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Método de pagamento</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a verified email to display" />
+                          <SelectTrigger className="focus:ring-0">
+                            <SelectValue placeholder="Método de pagamento" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -226,21 +227,36 @@ export function Sales() {
                           <SelectItem value="DINHEIRO">Dinheiro</SelectItem>
                         </SelectContent>
                       </Select>
-                      {field.value === 'DINHEIRO' ? <Input /> : null}
-                      <FormDescription>
-                        
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                {form.watch('payment_method') === 'DINHEIRO'
+                  ?
+                  <div>
+                    <Label>Valor da(s) notas(s)</Label>
+                    <Input
+                      className="focus:ring-0"
+                      placeholder='R$ 0'
+                      onChange={e => {
+                        setPaymentChange(e.target.value)
+                      }}
+                      onValueChange={(value) => console.log(value)}
+                      // value={paymentChange}
+                      // value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      //   parseInt(paymentChange),)}
+                    />
+                  </div>
+                  : null
+                }
+                <pre>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                        parseInt(paymentChange),)}</pre>
                 <Button type="submit">Submit</Button>
               </form>
             </Form>
             <DrawerFooter>
-              <Button>Submit</Button>
               <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline">Cancelar</Button>
               </DrawerClose>
             </DrawerFooter>
           </div>
