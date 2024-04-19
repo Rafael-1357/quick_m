@@ -21,6 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ export function Sales() {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [paymentChange, setPaymentChange] = useState(0)
   const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([])
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -203,10 +205,27 @@ export function Sales() {
       </div>
       <Drawer>
         <DrawerTrigger asChild>
-          <Button className="text-xl m-3 p-6 bg-purple-500">Verificar</Button>
+          <Button onClick={() => setSelectedProducts(checkSelectedProducts())} className="text-xl m-3 p-6 bg-purple-500">Verificar</Button>
         </DrawerTrigger>
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader className="max-h-96 overflow-auto">
+              {
+                selectedProducts.map(product => (
+                  product.qtd != 0 &&
+                  <div key={product.id} className="text-left">
+                    <DrawerTitle>{product.productname}</DrawerTitle>
+                    <DrawerDescription>
+                      {
+                        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                          product.productvalue,
+                      )}
+                      | Quantidade: {product.qtd}</DrawerDescription>
+                    <Separator className="my-4" />
+                  </div>
+                ))
+              }
+            </DrawerHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="px-4 flex flex-col gap-4">
                 <FormField
@@ -242,15 +261,15 @@ export function Sales() {
                         setPaymentChange(e.target.value)
                       }}
                       onValueChange={(value) => console.log(value)}
-                      // value={paymentChange}
-                      // value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                      //   parseInt(paymentChange),)}
+                    // value={paymentChange}
+                    // value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    //   parseInt(paymentChange),)}
                     />
                   </div>
                   : null
                 }
                 <pre>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                        parseInt(paymentChange),)}</pre>
+                  parseInt(paymentChange),)}</pre>
                 <Button type="submit">Submit</Button>
               </form>
             </Form>
