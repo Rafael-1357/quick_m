@@ -49,6 +49,7 @@ export function Sales() {
   const [products, setProducts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [paymentChange, setPaymentChange] = useState(0)
+  const [paymentChangee, setPaymentChangee] = useState(0)
   const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([])
   const navigate = useNavigate()
@@ -129,6 +130,13 @@ export function Sales() {
     return totalPurchase
   }
 
+  function checkPaymentChange() {
+
+    console.log(Number(paymentChange) > 0)
+    console.log(Number(paymentChange))
+
+  }
+
   async function createOrder(data) {
     const user = JSON.parse(localStorage.getItem('user'))
 
@@ -203,7 +211,7 @@ export function Sales() {
           </div>
         ))}
       </div>
-      <Drawer>
+      <Drawer onOpenChange={() => setPaymentChange(0)}>
         <DrawerTrigger asChild>
           <Button onClick={() => setSelectedProducts(checkSelectedProducts())} className="text-xl m-3 p-6 bg-purple-500">Verificar</Button>
         </DrawerTrigger>
@@ -219,12 +227,22 @@ export function Sales() {
                       {
                         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                           product.productvalue,
-                      )}
+                        )}
                       | Quantidade: {product.qtd}</DrawerDescription>
                     <Separator className="my-4" />
                   </div>
                 ))
               }
+              <div className="mb-2">
+                <DrawerTitle>Valor total</DrawerTitle>
+                <DrawerDescription>
+                  {
+                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      checkTotalValue(),
+                    )
+                  }
+                </DrawerDescription>
+              </div>
             </DrawerHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="px-4 flex flex-col gap-4">
@@ -255,21 +273,19 @@ export function Sales() {
                   <div>
                     <Label>Valor da(s) notas(s)</Label>
                     <Input
-                      className="focus:ring-0"
+                      className="focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder='R$ 0'
+                      type='number'
                       onChange={e => {
                         setPaymentChange(e.target.value)
+                        checkPaymentChange()
                       }}
-                      onValueChange={(value) => console.log(value)}
-                    // value={paymentChange}
-                    // value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                    //   parseInt(paymentChange),)}
                     />
+                    <pre>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      paymentChange,)}</pre>
                   </div>
                   : null
                 }
-                <pre>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                  parseInt(paymentChange),)}</pre>
                 <Button type="submit">Submit</Button>
               </form>
             </Form>
