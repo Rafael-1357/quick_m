@@ -15,11 +15,13 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -27,9 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator"
 import { useNavigate } from 'react-router-dom'
 import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
+
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -39,15 +42,16 @@ const FormSchema = z.object({
   payment_method: z.string({
     required_error: "Selecione um(a) usuário(a)",
   }),
-  currency: z.string()
 });
-
 
 export function Sales() {
 
   const [products, setProducts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentChange, setPaymentChange] = useState(0)
+  const [paymentChangee, setPaymentChangee] = useState(0)
   const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([])
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -94,9 +98,10 @@ export function Sales() {
     if (action === 'add') {
       setProducts((product) =>
         product.map((product) =>
-          product.id === productId ? { ...product, qtd: product.qtd + 1 } : product
+          productId === product.id ? { ...product, qtd: product.qtd + 1 } : product
         )
       );
+
     } else if (action === 'remove') {
       setProducts((product) =>
         product.map((product) =>
@@ -125,6 +130,10 @@ export function Sales() {
     return totalPurchase
   }
 
+  function checkPaymentChange(value) {
+      setPaymentChange(Number(value) - checkTotalValue())
+  }
+
   async function createOrder(data) {
     const user = JSON.parse(localStorage.getItem('user'))
 
@@ -132,16 +141,13 @@ export function Sales() {
 
     const datasale = new Date()
 
-
     const dataJSON = JSON.stringify({
       users_iduser: user.id,
-      products: products,
+      products: checkSelectedProducts(),
       totalsale: totalPurchase.toString(),
       datesale: datasale,
       payment_methods: data.payment_method
     })
-
-    console.log(paymentMethodSelected)
 
     const response = await fetch('http://localhost:3000/api/sale', {
       method: "POST",
@@ -169,142 +175,118 @@ export function Sales() {
 
   return (
     <main className="w-full h-screen flex flex-col bg-zinc-50">
-      <header className="w-full flex justify-start ">
-        <Button onClick={() => { navigate('/PreSale') }} className="bg-purple-500 m-1 pl-3"><ArrowLeft className="mr-2" /> Voltar</Button>
+      <header className="w-full p-3 flex justify-start ">
+        <Button
+          onClick={() => { navigate('/PreSale') }}
+          className="bg-purple-500">
+          <ArrowLeft className="mr-2" /> Voltar
+        </Button>
       </header>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(createOrder)} className="w-full flex flex-col gap-3 overflow-y-auto p-2">
-          <div className="w-full grid grid-cols-2 gap-3 overflow-y-auto">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="w-full bg-zinc-100 shadow-md h-fit flex-wrap rounded border-2 p-2 border-zinc-100"
-              >
-                <h1 className="text-lg font-bold truncate">{(product.productname).toUpperCase()}</h1>
-                <p>
+      <div className="w-full p-3 pt-0 grid grid-cols-2 gap-3 overflow-y-auto">
+        {products.map(product => (
+          <div key={product.id}>
+            <h1
+              className="text-lg font-bold truncate">
+              {(product.productname).toUpperCase()}
+            </h1>
+            <span>{
+              new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                product.productvalue,
+              )
+            }</span>
+            <div className="flex gap-3">
+              <Button className="bg-purple-500" onClick={() => modifyQuantity(product.id, 'add')}><Plus /></Button>
+              <Input className='focus-visible:ring-0 text-center text-lg' value={product.qtd} readOnly></Input>
+              <Button className="bg-purple-500" onClick={() => modifyQuantity(product.id, 'remove')}><Minus /></Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Drawer onOpenChange={() => setPaymentChange(0)}>
+        <DrawerTrigger asChild>
+          <Button onClick={() => setSelectedProducts(checkSelectedProducts())} className="text-xl m-3 p-6 bg-purple-500">Verificar</Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader className="max-h-96 overflow-auto">
+              {
+                selectedProducts.map(product => (
+                  product.qtd != 0 &&
+                  <div key={product.id} className="text-left">
+                    <DrawerTitle>{product.productname}</DrawerTitle>
+                    <DrawerDescription>
+                      {
+                        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                          product.productvalue,
+                        )}
+                      | Quantidade: {product.qtd}</DrawerDescription>
+                    <Separator className="my-4" />
+                  </div>
+                ))
+              }
+              <div className="mb-2">
+                <DrawerTitle>Valor total</DrawerTitle>
+                <DrawerDescription>
                   {
                     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                      product.productvalue,
+                      checkTotalValue(),
                     )
                   }
-                </p>
-                <div className="flex gap-1 justify-between">
-                  <Button
-                    type='button'
-                    onClick={() => modifyQuantity(product.id, 'add')}
-                    className="bg-purple-500 hover:bg-purple-600 p-4">
-                    <Plus />
-                  </Button>
-                  <Input
-                    name={product.productvalue}
-                    readOnly
-                    type='Number'
-                    value={product.qtd}
-                    className="text-center text-lg m-0 border-zinc-400 p-0"
-                  />
-                  <Button
-                    type='button'
-                    onClick={() => modifyQuantity(product.id, 'remove')}
-                    className="bg-purple-500 hover:bg-purple-600 p-4">
-                    <Minus />
-                  </Button>
-                </div>
+                </DrawerDescription>
               </div>
-            ))}
-          </div>
-          <Drawer>
-            <DrawerTrigger>
-              <button
-                type="button"
-                className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500">
-                Conferir
-              </button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader className="max-h-96 overflow-auto">
-                {
-                  products.map(product => (
-                    product.qtd != 0 &&
-                    <div className="text-left">
-                      <DrawerTitle>{product.productname}</DrawerTitle>
-                      <DrawerDescription>
-                        R$ {
-                          new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                            product.productvalue,
-                          )}
-                        | Quantidade: {product.qtd}</DrawerDescription>
-                      <Separator className="my-4" />
-                    </div>
-                  ))
-                }
-              </DrawerHeader>
-              <DrawerFooter>
-                <div className="mb-2">
-                  <DrawerTitle>Valor total</DrawerTitle>
-                  <DrawerDescription>
-                    {
-                      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                        checkTotalValue(),
-                      )
-                    }
-                  </DrawerDescription>
-                </div>
+            </DrawerHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(createOrder)} className="px-4 flex flex-col gap-4">
                 <FormField
                   control={form.control}
                   name="payment_method"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Método de pagamento</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} onChange={setPaymentMethodSelected(field.value)}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um método" />
+                          <SelectTrigger className="focus:ring-0">
+                            <SelectValue placeholder="Método de pagamento" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {paymentMethods.map((method) => (
-                            <SelectItem key={method.id} value={method.method}>
-                              {(method.method).toUpperCase()}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="PIX">Pix</SelectItem>
+                          <SelectItem value="CREDITO">Crédito</SelectItem>
+                          <SelectItem value="DINHEIRO">Dinheiro</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {
-                  setPaymentMethodSelected == "Dinhero"
-                    ?
-                      <FormField
-                        control={form.control}
-                        name="currency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <Input type="text" placeholder=""/>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    : null
+                {form.watch('payment_method') === 'DINHEIRO'
+                  ?
+                  <div>
+                    <Label>Valor da(s) notas(s)</Label>
+                    <Input
+                      className="focus:ring-0  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder='R$ 0'
+                      type='number'
+                      onChange={e => {
+                        checkPaymentChange(e.target.value)
+                      }}
+                    />
+                    <pre>Devolver {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      paymentChange,)}</pre>
+                  </div>
+                  : null
                 }
-                <Button
-                  onClick={() => {
-                    const button = document.getElementById('submit');
-                    button.click();
-                  }}
-                  className="w-full text-white font-bold text-2xl p-4 rounded-lg bg-purple-500 mt-2">
-                  Finalizar
-                </Button>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-          <button className="hidden" id="submit" type="submit" />
-        </form>
-      </Form>
+                <Button type="submit">Submit</Button>
+              </form>
+            </Form>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">Cancelar</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </main>
   )
 }
