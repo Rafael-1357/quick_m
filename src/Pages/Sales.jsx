@@ -130,11 +130,8 @@ export function Sales() {
     return totalPurchase
   }
 
-  function checkPaymentChange() {
-
-    console.log(Number(paymentChange) > 0)
-    console.log(Number(paymentChange))
-
+  function checkPaymentChange(value) {
+      setPaymentChange(Number(value) - checkTotalValue())
   }
 
   async function createOrder(data) {
@@ -146,13 +143,11 @@ export function Sales() {
 
     const dataJSON = JSON.stringify({
       users_iduser: user.id,
-      products: products,
+      products: checkSelectedProducts(),
       totalsale: totalPurchase.toString(),
       datesale: datasale,
       payment_methods: data.payment_method
     })
-
-    console.log(paymentMethodSelected)
 
     const response = await fetch('http://localhost:3000/api/sale', {
       method: "POST",
@@ -176,10 +171,6 @@ export function Sales() {
       title: "Opss... Falha ao enviar venda!",
       description: "Verifique sua conexão com a internet.",
     })
-  }
-
-  function onSubmit(data) {
-    console.log(data)
   }
 
   return (
@@ -245,7 +236,7 @@ export function Sales() {
               </div>
             </DrawerHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="px-4 flex flex-col gap-4">
+              <form onSubmit={form.handleSubmit(createOrder)} className="px-4 flex flex-col gap-4">
                 <FormField
                   control={form.control}
                   name="payment_method"
@@ -273,15 +264,14 @@ export function Sales() {
                   <div>
                     <Label>Valor da(s) notas(s)</Label>
                     <Input
-                      className="focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="focus:ring-0  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder='R$ 0'
                       type='number'
                       onChange={e => {
-                        setPaymentChange(e.target.value)
-                        checkPaymentChange()
+                        checkPaymentChange(e.target.value)
                       }}
                     />
-                    <pre>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    <pre>Devolver {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                       paymentChange,)}</pre>
                   </div>
                   : null
