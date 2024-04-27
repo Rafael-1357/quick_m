@@ -50,7 +50,7 @@ export function Login() {
   })
 
   async function onSubmit(data) {
-    const response = await fetch('http://localhost:3000/api/users/auth', {
+    const response = await fetch('http://146.235.247.116:5555/api/users/auth', {
       method: "POST",
       headers: {
         "Content-type": "application/json",
@@ -79,7 +79,7 @@ export function Login() {
   }
 
   async function getUsers() {
-    const response = await fetch('http://localhost:3000/api/users', {
+    const response = await fetch('http://146.235.247.116:5555/api/users', {
       method: "GET",
       headers: {
         "Content-type": "application/json",

@@ -40,7 +40,7 @@ import { z } from "zod"
 
 const FormSchema = z.object({
   payment_method: z.string({
-    required_error: "Selecione um(a) usuário(a)",
+    required_error: "Selecione um método de pagamento",
   }),
 });
 
@@ -49,8 +49,6 @@ export function Sales() {
   const [products, setProducts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [paymentChange, setPaymentChange] = useState(0)
-  const [paymentChangee, setPaymentChangee] = useState(0)
-  const [paymentMethodSelected, setPaymentMethodSelected] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([])
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -65,7 +63,7 @@ export function Sales() {
   })
 
   async function getProducts() {
-    const response = await fetch('http://localhost:3000/api/products', {
+    const response = await fetch('http://146.235.247.116:5555/api/products', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -81,7 +79,7 @@ export function Sales() {
   }
 
   async function getPaymentMethods() {
-    const response = await fetch('http://localhost:3000/api/payment', {
+    const response = await fetch('http://146.235.247.116:5555/api/payment', {
       method: "GET",
       headers: {
         "Content-type": "application/json",
@@ -131,7 +129,7 @@ export function Sales() {
   }
 
   function checkPaymentChange(value) {
-      setPaymentChange(Number(value) - checkTotalValue())
+    setPaymentChange(Number(value) - checkTotalValue())
   }
 
   async function createOrder(data) {
@@ -149,7 +147,9 @@ export function Sales() {
       payment_methods: data.payment_method
     })
 
-    const response = await fetch('http://localhost:3000/api/sale', {
+    console.log(datasale)
+
+    const response = await fetch('http://146.235.247.116:5555/api/sale', {
       method: "POST",
       headers: {
         "Content-type": "application/json",
@@ -224,7 +224,8 @@ export function Sales() {
                   </div>
                 ))
               }
-              <div className="mb-2">
+            </DrawerHeader>
+            <div className="my-2 px-4">
                 <DrawerTitle>Valor total</DrawerTitle>
                 <DrawerDescription>
                   {
@@ -234,7 +235,6 @@ export function Sales() {
                   }
                 </DrawerDescription>
               </div>
-            </DrawerHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(createOrder)} className="px-4 flex flex-col gap-4">
                 <FormField
@@ -250,9 +250,11 @@ export function Sales() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="PIX">Pix</SelectItem>
-                          <SelectItem value="CREDITO">Crédito</SelectItem>
-                          <SelectItem value="DINHEIRO">Dinheiro</SelectItem>
+                          {paymentMethods.map((method) => (
+                            <SelectItem key={method.id} value={method.method.toUpperCase()}>
+                              {(method.method)}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -276,7 +278,7 @@ export function Sales() {
                   </div>
                   : null
                 }
-                <Button type="submit">Submit</Button>
+                <Button className="bg-purple-500 hover:bg-purple-600" type="submit">Finalizar</Button>
               </form>
             </Form>
             <DrawerFooter>
